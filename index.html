@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salvi 27 Layer Torus · Live</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--amber:#ffb000;--fg:#e8e8e8;--dim:#8a8a8a;--line:#333}
+body{background:#050505;color:var(--fg);font-family:'Courier New',ui-monospace,monospace;padding:12px;line-height:1.35}
+.wrap{max-width:1280px;margin:0 auto}
+header{border:2px solid #fff;padding:12px;margin-bottom:12px;text-align:center}
+header .org{font-size:.85rem;letter-spacing:2px;color:var(--dim)}
+header .glyph{font-size:1.05rem;margin:6px 0;word-break:break-word}
+header h1{font-size:1.2rem;letter-spacing:1px;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{border:1px solid #555;background:#0c0c0c;padding:10px}
+.panel h2{font-size:.85rem;letter-spacing:2px;border-bottom:1px solid #fff;padding-bottom:4px;margin-bottom:6px;text-transform:uppercase}
+.row{display:flex;justify-content:space-between;gap:8px;padding:2px 0;border-bottom:1px dashed #222;font-size:.85rem}
+.row .l{color:var(--dim)}.row .v{font-weight:bold;text-align:right;word-break:break-all}
+.ticker{border:2px solid #fff;background:#000;text-align:center;padding:10px;margin-bottom:12px}
+.ticker .big{font-size:2.6rem;color:var(--amber);letter-spacing:3px;text-shadow:0 0 10px rgba(255,176,0,.35)}
+.ticker small{display:block;color:var(--dim);font-size:.75rem}
+#cv{width:100%;height:440px;display:block;background:#000;border:1px solid #333;touch-action:none}
+@media(max-width:600px){#cv{height:340px}.ticker .big{font-size:1.9rem}}
+.state{margin-top:6px;padding:6px;border:1px solid #fff;text-align:center;font-weight:bold;letter-spacing:1px}
+.state.closed{background:#fff;color:#000}
+.hash{background:#000;border:1px solid #333;padding:6px;font-size:.72rem;word-break:break-all;margin-top:4px}
+.log{font-size:.65rem;color:var(--dim);word-break:break-all;margin-top:4px}
+.note{font-size:.72rem;color:var(--dim);margin-top:6px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.tile{border:1px solid #444;padding:8px;background:#080808}
+.tile .t{font-size:.75rem;color:var(--dim);letter-spacing:1px}
+.tile .val{font-size:1.35rem;font-weight:bold;margin:3px 0;word-break:break-all}
+.tile .val.err{font-size:.9rem;color:#bbb}
+.tile .meta{font-size:.65rem;color:var(--dim);word-break:break-all}
+.tile a{color:#ccc}
+input[type=text]{width:100%;background:#000;color:#fff;border:1px solid #888;padding:6px;font-family:inherit;font-size:.85rem}
+button{background:#fff;color:#000;border:0;padding:6px 12px;font-family:inherit;font-weight:bold;cursor:pointer;margin-top:6px}
+.badge{display:inline-block;border:1px solid #fff;padding:1px 6px;font-size:.7rem;letter-spacing:1px;margin-bottom:6px}
+.up{color:#fff}.dn{color:#aaa}
+footer{border-top:2px solid #fff;margin-top:14px;padding:12px;text-align:center;letter-spacing:2px}
+.amber{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="org">CAPOMASTRO HOLDINGS LTD. · APPLIED PHYSICS DIVISION · R. SALVI</div>
+  <div class="glyph">攵 Liibrelibraii Canon Will and Testimonial Creed 攵Σάλβι 攵Osu攵</div>
+  <div class="glyph">𐤀𐤁𐤂Δ Σ Ω ∫ ≈ ∀ ∞ ॐ ΣΑΛΒΙ</div>
+  <h1>Salvi 27 Layer Torus · Live Clock, Witness Hash and Market Rates</h1>
+</header>
+
+<div class="ticker">
+  <div class="big" id="tickSigma">...</div>
+  <small>Salvi Sigma ticker (CU) · Sigma = D + H + M + S since 2025-04-01T00:00:00Z · CU = Compute Unit</small>
+  <small>This is clock arithmetic, not a real-world debt figure.</small>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2>27 Layer Fold · 3 interlocking tori x 9 nested layers</h2>
+    <canvas id="cv"></canvas>
+    <div class="note">Hand-rolled 3D perspective projection, depth sorted. Torus A turns with the seconds hand, torus B with the minute, torus C with the hour; the whole assembly is tilted by the flywheel angle. Drag to look around. Layers drawn: <span id="layerCount">0</span>.</div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Torus Clock</h2>
+      <div class="row"><span class="l">Now (UTC)</span><span class="v" id="nowUtc">..</span></div>
+      <div class="row"><span class="l">Now (Edmonton)</span><span class="v" id="nowLocal">..</span></div>
+      <div class="row"><span class="l">D (days since epoch)</span><span class="v" id="cD">..</span></div>
+      <div class="row"><span class="l">H (hour of day, UTC)</span><span class="v" id="cH">..</span></div>
+      <div class="row"><span class="l">M (minute)</span><span class="v" id="cM">..</span></div>
+      <div class="row"><span class="l">S (second)</span><span class="v" id="cS">..</span></div>
+      <div class="row"><span class="l">Sigma = D+H+M+S</span><span class="v amber" id="cSig">..</span></div>
+      <div class="row"><span class="l">Sigma mod 9</span><span class="v" id="cMod">..</span></div>
+      <div class="state" id="cState">..</div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <h2>Flywheel and Periodicities</h2>
+      <div class="row"><span class="l">Flywheel D mod 364</span><span class="v" id="fFly">..</span></div>
+      <div class="row"><span class="l">12h half floor(H/12)</span><span class="v" id="fH2">..</span></div>
+      <div class="row"><span class="l">30m half floor(M/30)</span><span class="v" id="fM2">..</span></div>
+      <div class="row"><span class="l">Seconds</span><span class="v" id="fS">..</span></div>
+      <div class="row"><span class="l">Angle ((D mod 364)/364 x 13 x 360) mod 360</span><span class="v" id="fAng">..</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:12px">
+  <div class="panel">
+    <h2>SHA-256 Witness Hash (every second)</h2>
+    <div class="note">Message: <span id="wMsg">..</span></div>
+    <div class="hash" id="wHash">..</div>
+    <div class="log" id="wLog"></div>
+    <div class="note">This is a hash commitment of <code>ISOtimestamp|Sigma|mod</code> computed with the browser's built-in crypto.subtle. Anyone can recompute it from the same timestamp with any SHA-256 tool, for example: <code>printf '%s' 'MESSAGE' | sha256sum</code>. It proves the three values belong together; it does not hide the timestamp.</div>
+  </div>
+  <div class="panel">
+    <h2>Verify a Witness</h2>
+    <div class="note" style="margin-bottom:4px">Paste an ISO timestamp (example 2026-07-30T14:04:00.000Z). The page recomputes Sigma, mod and the hash.</div>
+    <input type="text" id="vIn" placeholder="2026-07-30T14:04:00.000Z">
+    <input type="text" id="vHash" placeholder="optional: paste a hash to compare" style="margin-top:6px">
+    <button id="vBtn">Recompute</button>
+    <div class="row" style="margin-top:6px"><span class="l">Canonical timestamp</span><span class="v" id="vTs">..</span></div>
+    <div class="row"><span class="l">D, H, M, S</span><span class="v" id="vDHMS">..</span></div>
+    <div class="row"><span class="l">Sigma / mod 9</span><span class="v" id="vSig">..</span></div>
+    <div class="hash" id="vOut">..</div>
+    <div class="note" id="vCmp"></div>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:12px">
+  <h2>Live Market Rates</h2>
+  <div class="note" style="margin-bottom:6px">Fetched live by this browser from free public sources, refreshed every 60 seconds. Last refresh: <span id="rLast">..</span>. A failed source shows its error, never a filler number. Daily reference rates (ECB, Treasury) update once per business day.</div>
+  <div class="tiles" id="tiles"></div>
+</div>
+
+<div class="grid" style="margin-top:12px">
+  <div class="panel">
+    <h2>Comparison · Sigma rate vs Dow Jones</h2>
+    <div class="row"><span class="l">Sigma rate (definition)</span><span class="v">+1 CU/s between rollovers</span></div>
+    <div class="row"><span class="l">Last observed change in Sigma</span><span class="v amber" id="kLast">..</span></div>
+    <div class="row"><span class="l">Mean change, last 60 s observed</span><span class="v" id="kAvg">..</span></div>
+    <div class="row"><span class="l">Jump at next minute rollover</span><span class="v" id="kMin">..</span></div>
+    <div class="row"><span class="l">Jump at next hour rollover</span><span class="v" id="kHr">..</span></div>
+    <div class="row"><span class="l">Jump at next UTC day rollover</span><span class="v" id="kDay">..</span></div>
+    <div class="row"><span class="l">Seconds to next minute / hour / day</span><span class="v" id="kTo">..</span></div>
+    <div class="row"><span class="l">Dow Jones Industrial Average</span><span class="v" id="kDow">..</span></div>
+    <div class="row"><span class="l">Dow change today</span><span class="v" id="kDowCh">..</span></div>
+    <div class="note">Sigma is clock arithmetic in Compute Units. The Dow is a live market quote in index points. They are shown side by side for reference only; no profit, reserve or equity figure is derived.</div>
+  </div>
+  <div class="panel">
+    <h2>ISO 20022 Reference · pacs.008</h2>
+    <div class="badge">Internal sample record, not a cleared payment</div>
+    <div class="row"><span class="l">MsgId</span><span class="v">CAPOMASTRO-SEPA-2026-37269-009</span></div>
+    <div class="row"><span class="l">CreDtTm</span><span class="v">2026-07-29T11:42:12Z</span></div>
+    <div class="row"><span class="l">EndToEndId</span><span class="v">37269-OMEGA-8991-28035-243</span></div>
+    <div class="row"><span class="l">UETR</span><span class="v">c0a80001-2026-0009-0000-000000037269</span></div>
+    <div class="row"><span class="l">IntrBkSttlmAmt</span><span class="v">USD 37269.00</span></div>
+    <div class="row"><span class="l">Dbtr / DbtrAgt BICFI</span><span class="v">Capomastro Holdings Ltd. Applied Physics Division / CAPOMASTRO33XXX</span></div>
+    <div class="row"><span class="l">Cdtr / CdtrAgt BICFI</span><span class="v">Salvalaggio Family Trust / SALVALAGGIO99XXX</span></div>
+    <div class="row"><span class="l">RmtInf Ustrd</span><span class="v">AETURNUM UNIFIED MATRIX ZERO BALANCE MODULO 9 RECONCILED</span></div>
+    <h2 style="margin-top:8px">Digit sum mod 9 (computed live)</h2>
+    <div id="mod9"></div>
+    <h2 style="margin-top:8px">USD 37,269.00 at live rates</h2>
+    <div id="equiv"></div>
+  </div>
+</div>
+
+<footer>Imekwisha. Ubuntu. Y|oida. Salvi.</footer>
+</div>
+
+<script>
+"use strict";
+const EPOCH_MS = Date.UTC(2025,3,1,0,0,0);
+const TZ = 'America/Edmonton';
+const $ = id => document.getElementById(id);
+
+function clockFor(ms){
+  const total = Math.floor((ms - EPOCH_MS)/1000);
+  const D = Math.floor(total/86400);
+  let r = total - D*86400;
+  const H = Math.floor(r/3600); r -= H*3600;
+  const M = Math.floor(r/60); const S = r - M*60;
+  const sigma = D+H+M+S;
+  const mod = ((sigma%9)+9)%9;
+  const fly = ((D%364)+364)%364;
+  const angle = ((fly/364)*13*360)%360;
+  return {total,D,H,M,S,sigma,mod,fly,h2:Math.floor(H/12),m2:Math.floor(M/30),angle};
+}
+function stateText(c){ return c.mod===0 ? 'Closed Golden State' : 'Open State, '+c.sigma.toLocaleString('en-US')+' CU'; }
+async function sha256hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function witnessMsg(ms){ const c=clockFor(ms); return {c, msg: new Date(ms).toISOString()+'|'+c.sigma+'|'+c.mod}; }
+function edm(d){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZoneName:'short'}).format(d);
+}
+
+/* ---------- clock + witness ---------- */
+let lastSigma=null; const deltas=[]; const wlog=[]; let lastSec=null;
+window.__witness = [];
+async function tick(){
+  const nowMs = Date.now();
+  const secMs = Math.floor(nowMs/1000)*1000;
+  if (secMs===lastSec) return; lastSec=secMs;
+  const {c,msg} = witnessMsg(secMs);
+  $('tickSigma').textContent = c.sigma.toLocaleString('en-US')+' CU';
+  $('nowUtc').textContent = new Date(secMs).toISOString();
+  $('nowLocal').textContent = edm(new Date(secMs));
+  $('cD').textContent=c.D; $('cH').textContent=c.H; $('cM').textContent=c.M; $('cS').textContent=c.S;
+  $('cSig').textContent=c.sigma.toLocaleString('en-US'); $('cMod').textContent=c.mod;
+  const st=$('cState'); st.textContent=stateText(c); st.className='state'+(c.mod===0?' closed':'');
+  $('fFly').textContent=c.fly; $('fH2').textContent=c.h2+(c.h2?' (second half)':' (first half)');
+  $('fM2').textContent=c.m2+(c.m2?' (second half)':' (first half)'); $('fS').textContent=c.S;
+  $('fAng').textContent=c.angle.toFixed(4)+'°';
+  // comparison
+  if (lastSigma!==null){ const d=c.sigma-lastSigma; deltas.push(d); if(deltas.length>60) deltas.shift();
+    $('kLast').textContent=(d>=0?'+':'')+d+' CU in 1 s'; }
+  else $('kLast').textContent='waiting for 2nd tick';
+  lastSigma=c.sigma;
+  if (deltas.length){ const s=deltas.reduce((a,b)=>a+b,0); $('kAvg').textContent=(s/deltas.length).toFixed(3)+' CU/s over '+deltas.length+' s'; }
+  const nm = clockFor(secMs + (60-c.S)*1000), pm = clockFor(secMs + (60-c.S-1)*1000);
+  $('kMin').textContent=(nm.sigma-pm.sigma>=0?'+':'')+(nm.sigma-pm.sigma)+' CU';
+  const toHr = 3600-(c.M*60+c.S), toDay = 86400-(c.H*3600+c.M*60+c.S);
+  const nh=clockFor(secMs+toHr*1000), ph=clockFor(secMs+(toHr-1)*1000);
+  const nd=clockFor(secMs+toDay*1000), pd=clockFor(secMs+(toDay-1)*1000);
+  $('kHr').textContent=(nh.sigma-ph.sigma>=0?'+':'')+(nh.sigma-ph.sigma)+' CU';
+  $('kDay').textContent=(nd.sigma-pd.sigma>=0?'+':'')+(nd.sigma-pd.sigma)+' CU';
+  $('kTo').textContent=(60-c.S)+' / '+toHr+' / '+toDay;
+  // witness
+  const h = await sha256hex(msg);
+  $('wMsg').textContent=msg; $('wHash').textContent=h;
+  wlog.unshift(msg+' -> '+h); if(wlog.length>5) wlog.pop();
+  $('wLog').innerHTML=wlog.slice(1).map(x=>x.replace(/&/g,'&amp;').replace(/</g,'&lt;')).join('<br>');
+  window.__witness.push({msg,hash:h,sigma:c.sigma,mod:c.mod}); if(window.__witness.length>120) window.__witness.shift();
+  scene.c = c;
+}
+setInterval(tick, 200); tick();
+
+$('vBtn').addEventListener('click', async ()=>{
+  const raw=$('vIn').value.trim(); const t=Date.parse(raw);
+  if (!raw || isNaN(t)) { $('vOut').textContent='Not a valid timestamp'; return; }
+  if (t<EPOCH_MS){ $('vOut').textContent='Timestamp is before the epoch 2025-04-01T00:00:00Z'; return; }
+  const {c,msg}=witnessMsg(t); const h=await sha256hex(msg);
+  $('vTs').textContent=new Date(t).toISOString(); $('vDHMS').textContent=c.D+', '+c.H+', '+c.M+', '+c.S;
+  $('vSig').textContent=c.sigma+' / '+c.mod+' ('+stateText(c)+')';
+  $('vOut').textContent='SHA-256("'+msg+'") = '+h;
+  const cmp=$('vHash').value.trim().toLowerCase();
+  $('vCmp').textContent = cmp ? (cmp===h ? 'MATCH: pasted hash equals the recomputed hash.' : 'NO MATCH: pasted hash differs from the recomputed hash.') : '';
+});
+$('vIn').value = new Date(Math.floor(Date.now()/1000)*1000).toISOString();
+
+/* ---------- mod 9 panel ---------- */
+function digitSum(s){ return String(s).split('').reduce((a,ch)=>a+(+ch),0); }
+(function(){
+  const items=[['Amount 37269','37269'],['8991','8991'],['28035','28035'],['243','243'],['Omega 2391319625','2391319625']];
+  $('mod9').innerHTML = items.map(([lab,n])=>{
+    const ds=digitSum(n), m=Number(BigInt(n)%9n), dsm=ds%9;
+    const ok = m===dsm ? '' : ' (check mismatch)';
+    return '<div class="row"><span class="l">'+lab+'</span><span class="v">digit sum '+ds+', mod 9 = '+m+(m===0?' (0, closed)':' (not 0)')+ok+'</span></div>';
+  }).join('');
+})();
+
+/* ---------- live rates ---------- */
+const R = {}; // key -> {value, ...}
+const TILE_DEFS = [
+  ['dxy','US Dollar Index (DXY)'],['usdcad','USD / CAD'],['eurusd','EUR / USD'],
+  ['usdc','USDC / USD'],['xrp','XRP / USD'],['btc','BTC / USD'],['gold','Gold (COMEX front month, USD/oz)'],
+  ['dow','Dow Jones Industrial Average'],['us10y','US 10 Year Treasury yield (market)'],['ust10','US 10 Year Treasury par yield (official daily)'],
+  ['zim','Zimbabwe bond'],['rcm','2013 Royal Canadian Mint $3 coin']
+];
+$('tiles').innerHTML = TILE_DEFS.map(([k,t])=>'<div class="tile" id="tile_'+k+'"><div class="t">'+t+'</div><div class="val err">loading...</div><div class="meta"></div></div>').join('');
+function link(name,url){ return '<a href="'+url+'" target="_blank" rel="noopener">'+name+'</a>'; }
+function setTile(k,val,meta,err){
+  const el=$('tile_'+k); el.querySelector('.val').textContent=val; el.querySelector('.val').className='val'+(err?' err':''); el.querySelector('.meta').innerHTML=meta;
+  el.dataset.state = err ? 'error' : 'ok';
+}
+async function getJSON(url,ms=15000){
+  const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),ms);
+  try{ const r=await fetch(url,{signal:ac.signal,cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); }
+  finally{ clearTimeout(to); }
+}
+async function getText(url,ms=15000){
+  const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),ms);
+  try{ const r=await fetch(url,{signal:ac.signal,cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.text(); }
+  finally{ clearTimeout(to); }
+}
+const fmt=(n,d)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fetchedAt=()=>'fetched '+edm(new Date());
+function errTile(k,srcs,e){ R[k]=null; setTile(k,'Live feed unavailable from browser', srcs+'<br>error: '+(e&&e.name==='AbortError'?'timeout':(e&&e.message||e))+'<br>'+fetchedAt(), true); }
+
+const CNBC_URL='https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=.DJI%7CUS10Y%7C.DXY%7C%40GC.1&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json';
+const CNBC_SRC=link('CNBC quote service','https://www.cnbc.com/quotes/.DJI');
+async function loadCNBC(){
+  try{
+    const j=await getJSON(CNBC_URL);
+    const qs=j.FormattedQuoteResult.FormattedQuote; const by={}; qs.forEach(q=>by[q.symbol]=q);
+    const num=s=>parseFloat(String(s).replace(/[,%]/g,''));
+    const one=(k,sym,unit,dp)=>{
+      const q=by[sym];
+      if(!q||q.code!==0||!q.last||isNaN(num(q.last))){ errTile(k,CNBC_SRC,new Error('no quote for '+sym)); return; }
+      const v=num(q.last); R[k]={value:v,change:q.change,pct:q.change_pct,time:q.last_time};
+      setTile(k, fmt(v,dp)+unit, 'change '+q.change+' ('+q.change_pct+')<br>quote time '+edm(new Date(q.last_time))+'<br>source '+link('CNBC '+sym,'https://www.cnbc.com/quotes/'+encodeURIComponent(sym))+'<br>'+fetchedAt());
+    };
+    one('dow','.DJI','',2); one('us10y','US10Y','%',3); one('dxy','.DXY','',3); one('gold','@GC.1','',2);
+  }catch(e){ ['dow','us10y','dxy','gold'].forEach(k=>errTile(k,CNBC_SRC,e)); }
+}
+async function loadFX(){
+  const src1=link('Frankfurter (ECB reference)','https://frankfurter.dev'), src2=link('open.er-api.com','https://www.exchangerate-api.com');
+  let usdcad,eurusd,meta;
+  try{
+    const j=await getJSON('https://api.frankfurter.dev/v1/latest?base=USD&symbols=CAD,EUR');
+    usdcad=j.rates.CAD; eurusd=1/j.rates.EUR; meta='ECB reference date '+j.date+'<br>source '+src1;
+  }catch(e1){
+    try{ const j=await getJSON('https://open.er-api.com/v6/latest/USD'); usdcad=j.rates.CAD; eurusd=1/j.rates.EUR; meta='provider update '+edm(new Date(j.time_last_update_unix*1000))+'<br>source '+src2+' (fallback; primary error: '+e1.message+')'; }
+    catch(e2){ errTile('usdcad',src1+' / '+src2,e2); errTile('eurusd',src1+' / '+src2,e2); return; }
+  }
+  R.usdcad={value:usdcad}; R.eurusd={value:eurusd};
+  setTile('usdcad',fmt(usdcad,4)+' CAD',meta+'<br>'+fetchedAt());
+  setTile('eurusd',fmt(eurusd,4)+' USD',meta+'<br>'+fetchedAt());
+}
+async function loadTreasury(){
+  const now=new Date(); const src=link('U.S. Treasury daily par yield curve','https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve');
+  const ym=d=>d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,'0');
+  try{
+    let best=null;
+    for (const d of [now,new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-1,15))]){
+      const x=await getText('https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month='+ym(d),20000);
+      const doc=new DOMParser().parseFromString(x,'application/xml');
+      const props=[...doc.getElementsByTagNameNS('*','properties')];
+      for(const p of props){
+        const dt=p.getElementsByTagNameNS('*','NEW_DATE')[0], y=p.getElementsByTagNameNS('*','BC_10YEAR')[0];
+        if(dt&&y&&y.textContent){ const k=dt.textContent.slice(0,10); if(!best||k>best.date) best={date:k,y:parseFloat(y.textContent)}; }
+      }
+      if(best) break;
+    }
+    if(!best) throw new Error('no 10 year value in feed');
+    R.ust10={value:best.y}; setTile('ust10',fmt(best.y,2)+'%','curve date '+best.date+'<br>source '+src+'<br>'+fetchedAt());
+  }catch(e){ errTile('ust10',src,e); }
+}
+async function loadCrypto(){
+  const cg=link('CoinGecko','https://www.coingecko.com'), cb=link('Coinbase spot','https://www.coinbase.com');
+  let j=null, cgErr=null;
+  try{ j=await getJSON('https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,ripple,bitcoin&vs_currencies=usd&include_last_updated_at=true&include_24hr_change=true'); }catch(e){ cgErr=e; }
+  const map={usdc:['usd-coin','USDC-USD',4],xrp:['ripple','XRP-USD',4],btc:['bitcoin','BTC-USD',2]};
+  for(const [k,[id,pair,dp]] of Object.entries(map)){
+    if(j&&j[id]&&typeof j[id].usd==='number'){
+      const q=j[id]; R[k]={value:q.usd};
+      setTile(k,fmt(q.usd,dp)+' USD','24h '+(q.usd_24h_change!=null?q.usd_24h_change.toFixed(2)+'%':'n/a')+'<br>price time '+edm(new Date(q.last_updated_at*1000))+'<br>source '+cg+'<br>'+fetchedAt());
+    } else {
+      try{ const c=await getJSON('https://api.coinbase.com/v2/prices/'+pair+'/spot'); const v=parseFloat(c.data.amount); if(isNaN(v)) throw new Error('bad value');
+        R[k]={value:v}; setTile(k,fmt(v,dp)+' USD','source '+cb+' (fallback'+(cgErr?'; CoinGecko error: '+cgErr.message:'')+')<br>'+fetchedAt());
+      }catch(e){ errTile(k,cg+' / '+cb,e); }
+    }
+  }
+}
+function staticTiles(){
+  setTile('zim','No live feed','No free public live price feed exists for Zimbabwe government bonds. No value shown.<br>checked '+edm(new Date()),true);
+  if(R.usdcad&&R.usdcad.value){ setTile('rcm','3.00 CAD face','= '+fmt(3/R.usdcad.value,4)+' USD at live USD/CAD '+fmt(R.usdcad.value,4)+'<br>No live feed for collector or numismatic value; face value only.<br>'+fetchedAt()); }
+  else setTile('rcm','3.00 CAD face','No live feed for collector value. USD equivalent unavailable because USD/CAD did not load.',true);
+}
+function updateDerived(){
+  if(R.dow&&R.dow.value){ $('kDow').textContent=fmt(R.dow.value,2)+' pts'; $('kDowCh').textContent=R.dow.change+' pts ('+R.dow.pct+')'; }
+  else { $('kDow').textContent='live feed unavailable'; $('kDowCh').textContent='live feed unavailable'; }
+  const A=37269; const rows=[];
+  rows.push(['CAD', R.usdcad? fmt(A*R.usdcad.value,2)+' CAD':'rate unavailable']);
+  rows.push(['EUR', R.eurusd? fmt(A/R.eurusd.value,2)+' EUR':'rate unavailable']);
+  rows.push(['XRP', R.xrp? fmt(A/R.xrp.value,2)+' XRP':'rate unavailable']);
+  rows.push(['USDC', R.usdc? fmt(A/R.usdc.value,2)+' USDC':'rate unavailable']);
+  $('equiv').innerHTML=rows.map(r=>'<div class="row"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>').join('')+'<div class="note">Arithmetic conversion at the rates in the tiles above. Not a settlement.</div>';
+}
+async function refreshRates(){
+  await Promise.allSettled([loadCNBC(),loadFX(),loadCrypto(),loadTreasury()]);
+  staticTiles(); updateDerived(); $('rLast').textContent=edm(new Date());
+  window.__ratesDone=(window.__ratesDone||0)+1;
+}
+refreshRates(); setInterval(refreshRates,60000);
+
+/* ---------- 27 layer 3D torus fold (canvas) ---------- */
+const cv=$('cv'), ctx=cv.getContext('2d');
+const scene={c:null, yaw:0, pitch:0};
+const TORI=[]; // 3 groups x 9 nested
+const RMAJ=1.0;
+for(let g=0; g<3; g++) for(let k=0;k<9;k++) TORI.push({g,k,R:RMAJ*(0.86+k*0.03),r:0.05+k*0.028});
+$('layerCount').textContent=TORI.length;
+function rotX(p,a){const c=Math.cos(a),s=Math.sin(a);return [p[0],p[1]*c-p[2]*s,p[1]*s+p[2]*c];}
+function rotY(p,a){const c=Math.cos(a),s=Math.sin(a);return [p[0]*c+p[2]*s,p[1],-p[0]*s+p[2]*c];}
+function rotZ(p,a){const c=Math.cos(a),s=Math.sin(a);return [p[0]*c-p[1]*s,p[0]*s+p[1]*c,p[2]];}
+let drag=null;
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,yaw:scene.yaw,pitch:scene.pitch};cv.setPointerCapture(e.pointerId);});
+cv.addEventListener('pointermove',e=>{if(!drag)return;scene.yaw=drag.yaw+(e.clientX-drag.x)*0.01;scene.pitch=drag.pitch+(e.clientY-drag.y)*0.01;});
+cv.addEventListener('pointerup',()=>drag=null);
+function draw(){
+  const dpr=window.devicePixelRatio||1, W=cv.clientWidth, Hh=cv.clientHeight;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(Hh*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(Hh*dpr);}
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle='#000'; ctx.fillRect(0,0,W,Hh);
+  const c=scene.c; if(!c){requestAnimationFrame(draw);return;}
+  // all angles come from the real clock; sub-second fraction from Date.now() for smooth motion
+  const frac=(Date.now()%1000)/1000;
+  const aS=((c.S+frac)/60)*2*Math.PI;            // torus A: seconds hand
+  const aM=((c.M+(c.S+frac)/60)/60)*2*Math.PI;    // torus B: minute hand
+  const aH=((c.H+c.M/60)/24)*2*Math.PI;          // torus C: hour of day
+  const tilt=c.angle*Math.PI/180;                  // flywheel angle
+  const groups=[
+    {off:[-0.55,0,0], pre:p=>p, spin:aS},
+    {off:[0.55,0,0],  pre:p=>rotX(p,Math.PI/2), spin:aM},
+    {off:[0,0.55,0],  pre:p=>rotY(p,Math.PI/2), spin:aH}
+  ];
+  const segs=[]; const NU=48, NV=10;
+  const scale=Math.min(W,Hh)*0.30, cx=W/2, cy=Hh/2, camZ=4.2;
+  const proj=p=>{ const z=p[2]+camZ, f=camZ/z; return [cx+p[0]*scale*f, cy+p[1]*scale*f, p[2]]; };
+  const world=(t,u,v)=>{
+    const G=groups[t.g];
+    let p=[(t.R+t.r*Math.cos(v))*Math.cos(u),(t.R+t.r*Math.cos(v))*Math.sin(u),t.r*Math.sin(v)];
+    p=rotZ(p,G.spin*(1+t.k*0.0)); p=G.pre(p);
+    p=[p[0]+G.off[0],p[1]+G.off[1],p[2]+G.off[2]];
+    p=rotZ(p,tilt*0.25); p=rotX(p,0.55+tilt*0.5+scene.pitch); p=rotY(p,scene.yaw+aM*0.25);
+    return p;
+  };
+  for(const t of TORI){
+    // 4 longitudinal rings (around the tube) per layer plus meridian loops
+    for(let j=0;j<NV;j+=(t.k%3===0?2:5)){
+      const v=j/NV*2*Math.PI; let prev=proj(world(t,0,v));
+      for(let i=1;i<=NU;i++){const cur=proj(world(t,i/NU*2*Math.PI,v)); segs.push([prev,cur,t]); prev=cur;}
+    }
+    if(t.k===8||t.k===4||t.k===0){
+      for(let i=0;i<NU;i+=4){ const u=i/NU*2*Math.PI; let prev=proj(world(t,u,0));
+        for(let j=1;j<=12;j++){const cur=proj(world(t,u,j/12*2*Math.PI)); segs.push([prev,cur,t]); prev=cur;} }
+    }
+  }
+  segs.sort((a,b)=>(b[0][2]+b[1][2])-(a[0][2]+a[1][2]));
+  for(const [a,b,t] of segs){
+    const z=(a[2]+b[2])/2, depth=Math.max(0,Math.min(1,(1.8-z)/3.6));
+    const shade=Math.round(70+depth*185);
+    ctx.strokeStyle='rgb('+shade+','+shade+','+shade+')';
+    ctx.globalAlpha=0.25+0.6*depth*(0.5+t.k/18);
+    ctx.lineWidth=(t.k%3===0?1.3:0.7)*(0.6+depth);
+    ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  ctx.fillStyle='#ffb000'; ctx.font=(W<500?10:12)+'px Courier New, monospace';
+  ctx.fillText('Sigma '+c.sigma.toLocaleString('en-US')+' CU · mod 9 = '+c.mod, 10, 18);
+  ctx.fillStyle='#aaa';
+  ctx.fillText('A: S '+c.S+'  B: M '+c.M+'  C: H '+c.H+'  flywheel '+c.fly+' · '+c.angle.toFixed(2)+'°', 10, Hh-10);
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
