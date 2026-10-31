@@ -59,6 +59,16 @@ footer{border-top:2px solid #fff;margin-top:14px;padding:12px;text-align:center;
   <small>This is clock arithmetic, not a real-world debt figure.</small>
 </div>
 
+<div class="panel" style="margin:10px 0">
+  <h2>What is what, in plain English</h2>
+  <div class="note"><b>Sigma ticker (big number above):</b> the clock counted since midnight UTC on April 1, 2025. Every second it splits the elapsed time into whole Days (D), plus leftover Hours (H, 0 to 23), Minutes (M, 0 to 59) and Seconds (S, 0 to 59), and adds those four numbers together. It is a clock reading, not money.</div>
+  <div class="note"><b>Sigma mod 9:</b> the remainder when Sigma is divided by 9. A remainder of 0 is shown as the "Closed Golden State"; anything else is "Open State".</div>
+  <div class="note"><b>Flywheel and angle:</b> the day count wrapped into a 364-day year (D mod 364), turned into a rotation angle that goes around 13 times a year. It tilts the 3D torus.</div>
+  <div class="note"><b>27-layer fold:</b> 3 rings x 9 nested layers. Ring A turns with the seconds, ring B with the minutes, ring C with the hours.</div>
+  <div class="note"><b>SHA-256 witness:</b> a fingerprint of "time | Sigma | remainder". Anyone can recompute it to check those three values belong together.</div>
+  <div class="note"><b>Live market rates:</b> real quotes pulled from public feeds (CNBC, U.S. Treasury, ECB via Frankfurter, CoinGecko or Coinbase) every 60 seconds. A tile that says "unavailable" or "No live feed" means there is no public quote, and nothing is made up.</div>
+  <div class="note"><b>37,269 (USD 37,269.00):</b> not calculated by this page. It is the payment amount written in your own pacs.008 sample record (the ISO 20022 panel). The page only does two things with it: adds up its digits to check the mod 9 rule (3+7+2+6+9 = 27, and 27 divided by 9 leaves 0), and converts USD 37,269 into CAD, EUR, XRP and USDC at the live rates.</div>
+</div>
 <div class="grid">
   <div class="panel">
     <h2>27 Layer Fold · 3 interlocking tori x 9 nested layers</h2>
@@ -146,6 +156,7 @@ footer{border-top:2px solid #fff;margin-top:14px;padding:12px;text-align:center;
     <h2 style="margin-top:8px">Digit sum mod 9 (computed live)</h2>
     <div id="mod9"></div>
     <h2 style="margin-top:8px">USD 37,269.00 at live rates</h2>
+    <div class="note">37,269 is the amount typed into the sample record above; this page does not derive it. Below is that same amount converted at the current live rates.</div>
     <div id="equiv"></div>
   </div>
 </div>
